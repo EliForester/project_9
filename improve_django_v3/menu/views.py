@@ -1,23 +1,24 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
-from .models import Menu
-from .forms import *
+from .forms import MenuForm
+from .models import Menu, Item
 from django.utils import timezone
 from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, \
     update_session_auth_hash
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, \
+    PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 
 
 def menu_list(request):
     all_menus = Menu.objects.filter(expiration_date__lte=timezone.now())\
         .order_by('expiration_date').prefetch_related('items')
-    return render(request, 'menu/list_all_current_menus.html', {'menus': all_menus})
+    return render(request, 'menu/list_all_current_menus.html',
+                  {'menus': all_menus})
 
 
 def menu_detail(request, pk):
@@ -40,6 +41,7 @@ def create_new_menu(request):
             form.save(commit=False)
             form.created_date = timezone.now()
             menu = form.save()
+            print(form.cleaned_data)
             messages.success(request,"New menu created!")
             return HttpResponseRedirect(reverse('menu_detail',
                                                 kwargs={'pk': menu.pk}))
@@ -56,7 +58,8 @@ def edit_menu(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, "Menu updated!")
-            return HttpResponseRedirect(reverse('menu_detail', kwargs={'pk': pk}))
+            return HttpResponseRedirect(reverse('menu_detail',
+                                                kwargs={'pk': pk}))
     return render(request, 'menu/change_menu.html', {'form': form})
 
 

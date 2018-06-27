@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from .models import Menu, Item, Ingredient
 from django.contrib.auth.models import User
 from datetime import datetime
+from .forms import MenuForm
 import pytz
 
 
@@ -37,6 +38,7 @@ class ProjectTestCase(TestCase):
         self.assertEqual(menu_db_data, 1)
         self.assertEqual(item_db_data, 1)
         self.assertEqual(ingredient_db_data, 2)
+        self.assertEqual(self.test_menu.__str__(), 'aki')
 
     def test_menu_list_all(self):
         resp = self.client.get(reverse('menu_list'))
@@ -53,5 +55,23 @@ class ProjectTestCase(TestCase):
                         resp.content.decode('UTF-8').lower())
 
     def test_item_detail(self):
-        pass
+        resp = self.client.get(reverse('item_detail',
+                                       args=[self.test_item.pk]))
+        self.assertTemplateUsed('menu/item_detail.html')
+        self.assertContains(resp, self.test_item.name)
+        self.assertTrue(self.ingredient1.name in
+                        resp.content.decode('UTF-8').lower())
+
+    def test_unknown_item(self):
+        resp = self.client.get(reverse('item_detail',
+                                       args=[999]))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_menu_edit(self):
+        resp = self.client.get(reverse('menu_edit',
+                                       args=[self.test_item.pk]))
+        self.assertTemplateUsed('menu/menu_edit.html')
+        self.assertContains(resp, self.test_menu.season)
+        self.assertTrue(self.test_item.name in
+                        resp.content.decode('UTF-8').lower())
 
