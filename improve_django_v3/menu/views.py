@@ -1,16 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import Http404
-from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
 from .models import Menu
 from .forms import *
 from django.utils import timezone
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.http import HttpResponseRedirect
-from django.contrib import messages
 from django.core.urlresolvers import reverse
+
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, \
     update_session_auth_hash
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 
 
@@ -37,30 +37,29 @@ def create_new_menu(request):
     if request.method == "POST":
         form = MenuForm(request.POST)
         if form.is_valid():
-            menu = form.save(commit=False)
-            menu.created_date = timezone.now()
-            menu.save()
-            return redirect('menu_detail', pk=menu.pk)
+            form.save(commit=False)
+            form.created_date = timezone.now()
+            menu = form.save()
+            messages.success(request,"New menu created!")
+            return HttpResponseRedirect(reverse('menu_detail',
+                                                kwargs={'pk': menu.pk}))
     else:
         form = MenuForm()
-    return render(request, 'menu/menu_edit.html', {'form': form})
+    return render(request, 'menu/change_menu.html', {'form': form})
 
 
 def edit_menu(request, pk):
     menu = get_object_or_404(Menu, pk=pk)
-    items = Item.objects.all()
+    form = MenuForm(instance=menu)
     if request.method == "POST":
-        menu.season = request.POST.get('season', '')
-        menu.expiration_date = datetime.strptime(request.POST.get('expiration_date', ''), '%m/%d/%Y')
-        menu.items = request.POST.get('items', '')
-        menu.save()
+        form = MenuForm(data=request.POST, instance=menu)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Menu updated!")
+            return HttpResponseRedirect(reverse('menu_detail', kwargs={'pk': pk}))
+    return render(request, 'menu/change_menu.html', {'form': form})
 
-    return render(request, 'menu/change_menu.html', {
-        'menu': menu,
-        'items': items,
-        })
 
-"""
 def sign_in(request):
     form = AuthenticationForm()
     if request.method == 'POST':
@@ -71,7 +70,7 @@ def sign_in(request):
                 if user.is_active:
                     login(request, user)
                     return HttpResponseRedirect(
-                        reverse('home')  # TODO: go to profile
+                        reverse('menu_list')
                     )
                 else:
                     messages.error(
@@ -99,18 +98,33 @@ def sign_up(request):
             login(request, user)
             messages.success(
                 request,
-                "You're now a user! You've been signed in, too. "
-                "Now you can create a profile."
+                "You're now a user! You can create and edit menus. "
             )
-            return HttpResponseRedirect(reverse('menu:edit'))
+            return HttpResponseRedirect(reverse('menu_list'))
         else:
             print(form.errors)
     return render(request, 'menu/sign_up.html', {'form': form})
 
 
-@login_required(login_url='/menu/sign_in/')
+@login_required(login_url='/sign_in/')
 def sign_out(request):
     logout(request)
-    messages.success(request, "You've been signed out. Come back soon!")
-    return HttpResponseRedirect(reverse('home'))
-"""
+    messages.success(request, "You've been signed out.")
+    return HttpResponseRedirect(reverse('menu_list'))
+
+
+@login_required(login_url='/sign_in/')
+def change_password(request):
+    form = PasswordChangeForm(user=request.user)
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, form.user)
+            messages.success(request,
+                             'Password changed successfully')
+            return HttpResponseRedirect(reverse('menu_list'))
+        else:
+            messages.error(request,
+                           'Password not changed')
+    return render(request, 'menu/change_password.html', {'form': form})
