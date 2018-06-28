@@ -42,7 +42,7 @@ def create_new_menu(request):
             form.created_date = timezone.now()
             menu = form.save()
             print(form.cleaned_data)
-            messages.success(request,"New menu created!")
+            messages.success(request, "New menu created!")
             return HttpResponseRedirect(reverse('menu_detail',
                                                 kwargs={'pk': menu.pk}))
     else:

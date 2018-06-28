@@ -5,18 +5,19 @@ from django.core.urlresolvers import reverse
 from .models import Menu, Item, Ingredient
 from django.contrib.auth.models import User
 from datetime import datetime
-from .forms import MenuForm
 import pytz
 
 
 class ProjectTestCase(TestCase):
 
     def setUp(self):
-        expiration_date = datetime(2015,1,1, tzinfo=pytz.timezone('Asia/Tokyo'))
+        expiration_date = datetime(2015, 1, 1,
+                                   tzinfo=pytz.timezone('Asia/Tokyo'))
         self.test_menu = Menu.objects.create(season='aki',
                                              expiration_date=expiration_date)
 
-        chef = User.objects.create(first_name='test_chef', last_name='chef_test')
+        chef = User.objects.create(first_name='test_chef',
+                                   last_name='chef_test')
         self.test_item = Item.objects.create(name='tonkatsu',
                                              description='fried pork',
                                              chef=chef,
