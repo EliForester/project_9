@@ -9,4 +9,5 @@ class MenuForm(forms.ModelForm):
     class Meta:
         model = Menu
         exclude = ('created_date',)
-        widgets = {'expiration_date': SelectDateWidget}
+        widgets = {'expiration_date': SelectDateWidget(
+            years=range(2000, 2051))}

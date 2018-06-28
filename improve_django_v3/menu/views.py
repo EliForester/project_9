@@ -45,14 +45,15 @@ def create_new_menu(request):
             messages.success(request, "New menu created!")
             return HttpResponseRedirect(reverse('menu_detail',
                                                 kwargs={'pk': menu.pk}))
+        else:
+            messages.error(request, "Invalid menu")
     else:
         form = MenuForm()
     return render(request, 'menu/change_menu.html', {'form': form})
 
 
 def edit_menu(request, pk):
-    menu = get_object_or_404(Menu, pk=pk)
-    form = MenuForm(instance=menu)
+    menu = get_object_or_404(Menu.objects.select_related(), pk=pk)
     if request.method == "POST":
         form = MenuForm(data=request.POST, instance=menu)
         if form.is_valid():
@@ -60,6 +61,9 @@ def edit_menu(request, pk):
             messages.success(request, "Menu updated!")
             return HttpResponseRedirect(reverse('menu_detail',
                                                 kwargs={'pk': pk}))
+        else:
+            messages.error(request, "Invalid entry")
+    form = MenuForm(instance=menu)
     return render(request, 'menu/change_menu.html', {'form': form})
 
 
