@@ -5,7 +5,7 @@ from .forms import MenuForm
 from .models import Menu, Item
 from django.utils import timezone
 from django.http import HttpResponseRedirect
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, \
     update_session_auth_hash
